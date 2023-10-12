@@ -65,12 +65,17 @@ const loginUser = async (req, res) => {
       });
     }
 
-    // const userPassword = await user.validPassword(userLoginDetail.password); // unhashing password and comparing with one in the db
+    const userPassword = await user.validPassword(userLoginDetail.password); // unhashing password and comparing with one in the db
 
     // const userPassword = await bcrypt.compare(
     //   userLoginDetail.password,
     //   user.password
     // ); // unhashing password in the db
+    if (!userPassword) {
+      res.status(404).json({
+        message: "Email or passwor not correct!",
+      });
+    }
 
     const token = await jwt.sign(
       { email: user.email, id: user.id }, // signing jwt token for user login
