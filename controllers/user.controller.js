@@ -1,9 +1,7 @@
-const db = require("../models");
-const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
-const UserModel = db.user;
+const UserModel = require("../models/user.model");
 
 // POST - CREATE a user
 const createUser = async (req, res) => {
@@ -21,22 +19,21 @@ const createUser = async (req, res) => {
       });
     }
 
-    // hashing user password input before interacting with db
-    // const hashedPassword = await bcrypt.hash(newUserInput.password, 10);
+    // const hashedPassword = await generateHash(newUserInput.password); // hashing password
 
     const newUserObject = await UserModel.create({
-      // creating user into sequelize database
-      id: newUserInput.id,
+      // creating user into mongodb database
+      _id: newUserInput._id,
       firstname: newUserInput.firstname,
       lastname: newUserInput.lastname,
       email: newUserInput.email,
-      // password: hashedPassword,
       password: newUserInput.password,
       user_type: newUserInput.user_type,
+      gender: newUserInput.gender,
     });
 
     const token = await jwt.sign(
-      { id: newUserObject.id, email: newUserObject.email },
+      { _id: newUserObject._id, email: newUserObject.email },
       process.env.JWT_SECRET // signing JWTs
     );
 
@@ -46,8 +43,10 @@ const createUser = async (req, res) => {
       token,
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({
-      message: "Server Error", // returning error if create user operation failed.
+      message: error.message, // returning error if create user operation failed.
+      success: false,
     });
   }
 };
@@ -55,25 +54,21 @@ const createUser = async (req, res) => {
 // POST - LOGIN a user
 const loginUser = async (req, res) => {
   try {
-    const userLoginDetail = req.header;
+    const userLoginDetail = req.body;
 
     const user = await UserModel.findOne({ email: userLoginDetail.email }); // checking db for user provided email address
-
+    console.log(user);
     if (!user) {
       res.status(404).json({
         message: "User not found.", // handling error if email not found.
       });
     }
 
-    const userPassword = await user.validPassword(userLoginDetail.password); // unhashing password and comparing with one in the db
+    const userPassword = user.isValidPassword(userLoginDetail.password); // unhashing password and comparing with one in the db
 
-    // const userPassword = await bcrypt.compare(
-    //   userLoginDetail.password,
-    //   user.password
-    // ); // unhashing password in the db
     if (!userPassword) {
-      res.status(404).json({
-        message: "Email or passwor not correct!",
+      res.status(422).json({
+        message: "Email or password not correct!",
       });
     }
 
@@ -83,18 +78,13 @@ const loginUser = async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    console.log(token);
-    return res.status(200).json({
+    res.status(200).json({
       message: "Login successful",
       user,
       token,
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({
-      message: "Server Error",
-      data: null,
-    });
   }
 };
 

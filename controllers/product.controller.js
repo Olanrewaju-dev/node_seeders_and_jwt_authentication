@@ -1,21 +1,18 @@
-const db = require("../models");
+const ProductModel = require("../models/product.model");
 
-const ProductModel = db.product;
-
-// GET - View all products in db
 const getProducts = async (req, res) => {
-  console.log("I got here");
-  const allProducts = await ProductModel.findAll();
+  const allProducts = await ProductModel.find();
 
   if (!allProducts) {
     res.status(404).json({
-      message: "No product items found.",
+      message: "No product items found.", // handling error where items is not found.
       data: [],
     });
   }
 
-  res.status(200).json({
-    allProducts,
+  res.status(200).send({
+    message: "All products fetched successfully", // returning all products to client and success message.
+    data: allProducts,
   });
 };
 

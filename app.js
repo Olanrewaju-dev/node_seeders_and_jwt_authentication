@@ -1,19 +1,22 @@
 const express = require("express");
-const bodyParser = require("body-parser");
-const userRouter = require("./routes/user.router");
 const productRouter = require("./routes/product.router");
+const userRouter = require("./routes/user.router");
+const db = require("./config/dbConfig");
+const port = 3300;
 
+// starting db connection once server starts
+db.connectToMongoDB();
+
+// instatiating express
 const app = express();
-const port = 3000;
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.json());
 
 app.use("/users", userRouter);
 app.use("/products", productRouter);
 
 app.get("/", (req, res) => {
-  res.status(200).send({
+  res.status(200).json({
     message: "Hello World!",
   });
 });
@@ -28,5 +31,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server is listening on port ${port}`);
+  console.log("Server listening on port", port);
 });

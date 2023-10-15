@@ -1,11 +1,10 @@
 const express = require("express");
-
-const productController = require("../controllers/product.controller");
+const controller = require("../controllers/product.controller");
 const middleware = require("../middlewares/validation");
 
 const productRouter = express.Router();
 
-// GET - fetch all products
-productRouter.get("/", middleware.bearerTokenAuth, productController);
+// Fetching all product items route
+productRouter.get("/", middleware.bearerTokenAuth, controller);
 
 module.exports = productRouter;

@@ -1,12 +1,11 @@
 const Joi = require("joi");
 const jwt = require("jsonwebtoken");
-const db = require("../models");
+const ProductModel = require("../models/product.model");
 require("dotenv").config();
-
-const UserModel = db.user;
 
 const validateUserCreation = async (req, res, next) => {
   try {
+    // validating user input to create a new user
     const schema = Joi.object({
       id: Joi.string().required(),
       firstname: Joi.string().required(),
@@ -14,6 +13,7 @@ const validateUserCreation = async (req, res, next) => {
       password: Joi.string().required(),
       email: Joi.string().email().required(),
       user_type: Joi.string().valid("admin", "customer"),
+      gender: Joi.string().valid("male", "female"),
     });
 
     await schema.validateAsync(req.body, {
@@ -29,12 +29,14 @@ const validateUserCreation = async (req, res, next) => {
 
 const LoginValidation = async (req, res, next) => {
   try {
+    // validating login details
     const schema = Joi.object({
       password: Joi.string().required(),
       email: Joi.string().email().required(),
     });
 
     await schema.validateAsync(req.body, {
+      // validating user login via Joi module
       abortEarly: true,
       allowUnknown: true,
     });
@@ -58,15 +60,15 @@ const bearerTokenAuth = async (req, res, next) => {
 
   const decoded = await jwt.verify(token, process.env.JWT_SECRET); // verifying the user browser provided token.
 
-  const user = await UserModel.findOne({ id: decoded.id }); // checking the user id against records in db
+  const user = await ProductModel.find(); // checking the product item in db
 
   if (!user) {
-    res.status(401).json({
-      message: "You are not authorized!", // handling error in not found cases
+    res.status(501).json({
+      message: "Internal server error!", // handling error in not found cases
     });
   }
 
-  req.user = user; // returning user and granting access
+  req.user = user; // recognizing user and granting access
   next();
 };
 
